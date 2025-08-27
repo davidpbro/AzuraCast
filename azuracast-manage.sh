@@ -85,7 +85,7 @@ restore_azuracast() {
         echo "Available backups:"
         list_backups
         exit 1
-    }
+    fi
     
     echo "Stopping AzuraCast..."
     docker compose down
