@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Backup directory in Documents
+# Directory paths
 BACKUP_DIR="$HOME/Documents/azuracast-backup"
+SSL_DIR="$HOME/Documents/AzuraCast-fresh/ssl"
 
 # Function to show usage
 show_usage() {
@@ -9,15 +10,18 @@ show_usage() {
     echo "Usage: ./azuracast-manage.sh [command]"
     echo ""
     echo "Commands:"
-    echo "  start    - Start AzuraCast containers"
-    echo "  stop     - Stop AzuraCast containers"
-    echo "  restart  - Restart AzuraCast containers"
-    echo "  backup   - Create a backup"
-    echo "  restore  - Restore from a backup"
-    echo "  list-backups - List available backups"
-    echo "  status   - Show container status"
+    echo "  start         - Start AzuraCast containers"
+    echo "  stop          - Stop AzuraCast containers"
+    echo "  restart       - Restart AzuraCast containers"
+    echo "  backup        - Create a backup"
+    echo "  restore       - Restore from a backup"
+    echo "  list-backups  - List available backups"
+    echo "  status        - Show container status"
+    echo "  ssl-install   - Install SSL certificates (kpurr.pem and kpurr_key)"
+    echo "  ssl-status    - Check SSL certificate status"
     echo ""
     echo "Backup directory: $BACKUP_DIR"
+    echo "SSL directory: $SSL_DIR"
 }
 
 # Function to start containers
@@ -115,8 +119,45 @@ show_status() {
     docker compose ps
 }
 
-# Create backup directory if it doesn't exist
+# Function to install SSL certificates
+install_ssl() {
+    echo "Installing SSL certificates..."
+    
+    # Check if certificates exist
+    if [ ! -f "$SSL_DIR/kpurr.pem" ] || [ ! -f "$SSL_DIR/kpurr_key" ]; then
+        echo "Error: SSL certificates not found in $SSL_DIR"
+        echo "Please place kpurr.pem and kpurr_key in the SSL directory"
+        exit 1
+    fi
+    
+    # Copy certificates to the container
+    echo "Copying SSL certificates to container..."
+    docker cp "$SSL_DIR/kpurr.pem" azuracast:/var/azuracast/ssl/kpurr.pem
+    docker cp "$SSL_DIR/kpurr_key" azuracast:/var/azuracast/ssl/kpurr_key
+    
+    # Set proper permissions
+    docker exec azuracast chmod 644 /var/azuracast/ssl/kpurr.pem
+    docker exec azuracast chmod 600 /var/azuracast/ssl/kpurr_key
+    
+    echo "SSL certificates installed successfully!"
+    echo "Please restart AzuraCast to apply changes"
+}
+
+# Function to check SSL status
+check_ssl() {
+    echo "Checking SSL certificate status..."
+    
+    # Check local SSL files
+    echo "Local SSL files in $SSL_DIR:"
+    ls -l "$SSL_DIR"
+    
+    echo -e "\nSSL files in container:"
+    docker exec azuracast ls -l /var/azuracast/ssl/
+}
+
+# Create required directories if they don't exist
 mkdir -p "$BACKUP_DIR"
+mkdir -p "$SSL_DIR"
 
 # Main script logic
 case "$1" in
@@ -140,6 +181,12 @@ case "$1" in
         ;;
     status)
         show_status
+        ;;
+    ssl-install)
+        install_ssl
+        ;;
+    ssl-status)
+        check_ssl
         ;;
     *)
         show_usage
