@@ -62,19 +62,42 @@ backup_azuracast() {
     echo "Backups available in: $BACKUP_DIR"
 }
 
+# Function to list available backups
+list_backups() {
+    echo "Available backups in $BACKUP_DIR:"
+    ls -l "$BACKUP_DIR"
+}
+
 # Function to restore from backup
 restore_azuracast() {
     if [ -z "$1" ]; then
-        echo "Error: Please provide the backup file path"
-        echo "Usage: ./azuracast-manage.sh restore [backup_file]"
+        echo "Error: Please provide the backup file name"
+        echo "Available backups:"
+        list_backups
+        echo "Usage: ./azuracast-manage.sh restore [backup_file_name]"
         exit 1
     fi
+    
+    BACKUP_PATH="$BACKUP_DIR/$1"
+    
+    if [ ! -f "$BACKUP_PATH" ]; then
+        echo "Error: Backup file not found: $BACKUP_PATH"
+        echo "Available backups:"
+        list_backups
+        exit 1
+    }
     
     echo "Stopping AzuraCast..."
     docker compose down
     
+    echo "Copying backup file to container..."
+    docker cp "$BACKUP_PATH" "azuracast:/var/azuracast/backups/$1"
+    
     echo "Restoring from backup: $1"
-    docker exec azuracast php /var/azuracast/www/backend/bin/console azuracast:restore "$1"
+    docker exec azuracast php /var/azuracast/www/backend/bin/console azuracast:restore "/var/azuracast/backups/$1"
+    
+    echo "Cleaning up..."
+    docker exec azuracast rm "/var/azuracast/backups/$1"
     
     echo "Starting AzuraCast..."
     docker compose up -d
