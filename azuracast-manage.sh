@@ -110,6 +110,9 @@ show_status() {
     docker compose ps
 }
 
+# Create backup directory if it doesn't exist
+mkdir -p "$BACKUP_DIR"
+
 # Main script logic
 case "$1" in
     start)
@@ -126,6 +129,9 @@ case "$1" in
         ;;
     restore)
         restore_azuracast "$2"
+        ;;
+    list-backups)
+        list_backups
         ;;
     status)
         show_status
