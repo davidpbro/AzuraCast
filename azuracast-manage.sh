@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Backup directory in Documents
+BACKUP_DIR="$HOME/Documents/azuracast-backup"
+
 # Function to show usage
 show_usage() {
     echo "AzuraCast Management Script"
@@ -11,7 +14,10 @@ show_usage() {
     echo "  restart  - Restart AzuraCast containers"
     echo "  backup   - Create a backup"
     echo "  restore  - Restore from a backup"
+    echo "  list-backups - List available backups"
     echo "  status   - Show container status"
+    echo ""
+    echo "Backup directory: $BACKUP_DIR"
 }
 
 # Function to start containers
