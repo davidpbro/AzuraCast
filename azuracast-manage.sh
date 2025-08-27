@@ -45,9 +45,21 @@ restart_azuracast() {
 # Function to create backup
 backup_azuracast() {
     echo "Creating AzuraCast backup..."
+    # Create backup name with timestamp
     BACKUP_NAME="azuracast_backup_$(date +%Y%m%d_%H%M%S).zip"
+    BACKUP_PATH="$BACKUP_DIR/$BACKUP_NAME"
+    
+    # Create backup in container
     docker exec azuracast php /var/azuracast/www/backend/bin/console azuracast:backup "/var/azuracast/backups/$BACKUP_NAME"
-    echo "Backup completed: $BACKUP_NAME"
+    
+    # Copy backup from container to Documents
+    docker cp "azuracast:/var/azuracast/backups/$BACKUP_NAME" "$BACKUP_PATH"
+    
+    # Remove backup from container to save space
+    docker exec azuracast rm "/var/azuracast/backups/$BACKUP_NAME"
+    
+    echo "Backup completed: $BACKUP_PATH"
+    echo "Backups available in: $BACKUP_DIR"
 }
 
 # Function to restore from backup
