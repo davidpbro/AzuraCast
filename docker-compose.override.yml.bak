@@ -1,0 +1,7 @@
+services:
+  web:
+    volumes:
+      - ./ssl/kpurr.pem:/var/azuracast/storage/acme/ssl.crt:ro
+      - ./ssl/kpurr_key:/var/azuracast/storage/acme/ssl.key:ro
+    environment:
+      AZURACAST_HTTPS_PORT: 8443
