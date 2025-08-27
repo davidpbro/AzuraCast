@@ -78,7 +78,12 @@ restore_azuracast() {
         exit 1
     fi
     
-    BACKUP_PATH="$BACKUP_DIR/$1"
+    # If full path is provided, use it directly, otherwise prepend BACKUP_DIR
+    if [[ "$1" == /* ]]; then
+        BACKUP_PATH="$1"
+    else
+        BACKUP_PATH="$BACKUP_DIR/$1"
+    fi
     
     if [ ! -f "$BACKUP_PATH" ]; then
         echo "Error: Backup file not found: $BACKUP_PATH"
